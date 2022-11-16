@@ -58,13 +58,63 @@ to <- today() # 2019-08-20
 "AAPL" %>% 
     tq_get(get = "stock.prices", from = from, to = to) %>%
     select(date, adjusted) %>%
-    mutate(mavg_short = rollmean(adjusted, k = 5, na.pad = TRUE, align = "right"))
+    mutate(mavg_short = rollmean(adjusted, k = 5, na.pad = TRUE, align = "right")) %>%
+    mutate(mavg_long = rollmean(adjusted, k = 50, na.pad = TRUE, align = "right"))
+
+get_stock_data <-function(stock_symbol,
+                          from = today() - days(180),
+                          to = today(),
+                          mavg_short = 20,
+                          mavg_long = 50){
+    
+    stock_symbol %>% 
+        tq_get(get = "stock.prices", from = from, to = to) %>%
+        select(date, adjusted) %>%
+        mutate(mavg_short = rollmean(adjusted, k = mavg_short, na.pad = TRUE, align = "right")) %>%
+        mutate(mavg_long = rollmean(adjusted, k = mavg_long, na.pad = TRUE, align = "right"))
+}
+
+stock_data_tbl<- get_stock_data("AAPL", from = "2018-01-01", to = "2018-06-30", mavg_short = 5, mavg_long = 8)
 
 # 4.0 PLOT STOCK DATA ----
 
+g = stock_data_tbl %>%
+    gather(key = "legend", value = "value", adjusted:mavg_long, factor_key = TRUE) %>%
+    
+    ggplot(aes(date, value, color=legend, group=legend))+
+    geom_line(aes(linetype = legend)) +
+    theme_tq() +
+    scale_y_continuous(labels = scales :: dollar_format(largest_with_cents = 10))+
+    scale_color_tq()+
+    labs(y="Adjusted Share Price", x="")
+
+ggplotly(g)    
+
+plot_stock_data <- function(data){
+    g <- data %>%
+        gather(key = "legend", value = "value", adjusted:mavg_long, factor_key = TRUE) %>%
+        
+        ggplot(aes(date, value, color=legend, group=legend))+
+        geom_line(aes(linetype = legend)) +
+        theme_tq() +
+        scale_y_continuous(labels = scales :: dollar_format(largest_with_cents = 10))+
+        scale_color_tq()+
+        labs(y="Adjusted Share Price", x="")
+    
+    ggplotly(g)    
+}
+
+plot_stock_data(stock_data_tbl)
 
 
 # 5.0 GENERATE COMMENTARY ----
+
+warning_signal <-stockc_data_tbl %>% tail(1) %>%
+    mutate(mavg_warn_flag = mavg_short < mavg_long) %>%
+    pull(mavg_warning_flag)
+
+str_glue("In reviewing the stock prices of {user_input},
+         the 20-day moving average is below the 50-day moving average indicating negative trends.")
 
 
 
