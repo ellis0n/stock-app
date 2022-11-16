@@ -88,7 +88,7 @@ g = stock_data_tbl %>%
     scale_color_tq()+
     labs(y="Adjusted Share Price", x="")
 
-ggplotly(g)    
+ggplotly(g)   
 
 plot_stock_data <- function(data){
     g <- data %>%
@@ -109,12 +109,18 @@ plot_stock_data(stock_data_tbl)
 
 # 5.0 GENERATE COMMENTARY ----
 
-warning_signal <-stockc_data_tbl %>% tail(1) %>%
-    mutate(mavg_warn_flag = mavg_short < mavg_long) %>%
+warning_signal <-stock_data_tbl %>% tail(1) %>%
+    mutate(mavg_warning_flag = mavg_short < mavg_long) %>%
     pull(mavg_warning_flag)
 
-str_glue("In reviewing the stock prices of {user_input},
-         the 20-day moving average is below the 50-day moving average indicating negative trends.")
+n_short <- stock_data_tbl %>% pull(mavg_short) %>% is.na() %>% sum() + 1
+n_long <- stock_data_tbl %>% pull(mavg_long) %>% is.na() %>% sum() + 1
+
+if(warning_signal){
+    str_glue("In reviewing the stock prices of {user_input}, the {n_short}-day moving average is below the {n_long}-day moving average indicating negative trends.")
+}else{
+    str_glue("In reviewing the stock prices of {user_input}, the {n_long}-day moving average is above the {n_short}-day moving average indicating positive trends.")
+}
 
 
 
