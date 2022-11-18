@@ -25,7 +25,16 @@ ui <- fluidPage(
     #1.0 HEADER ----
     div(
         h1("Stock Analyzer", "by Business Science"),
-        p("Glen")
+        p("This is the first mini-project completed for a Shiny Course")
+    ),
+    #2.0 APPLICATION UI ----
+    div(
+        column(width = 4, 
+               wellPanel(
+                   pickerInput(inputId="stock_selection", choices = 1:10)
+               )
+               ),
+        column(width = 8, "PLOT")
     )
     
 )
